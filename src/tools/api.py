@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 import pandas as pd
 import requests
 
@@ -96,14 +97,18 @@ def search_line_items(
     period: str = "ttm",
     limit: int = 10,
 ) -> list[LineItem]:
-    """Fetch line items from API."""
-    # If not in cache or insufficient data, fetch from API
+    """Fetch line items from cache or API with basic retry on rate limits."""
+
+    cache_key = f"{ticker}_{','.join(sorted(line_items))}_{end_date}_{period}_{limit}"
+
+    if cached_data := _cache.get_line_items(cache_key):
+        return [LineItem(**item) for item in cached_data]
+
     headers = {}
     if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
         headers["X-API-KEY"] = api_key
 
     url = "https://api.financialdatasets.ai/financials/search/line-items"
-
     body = {
         "tickers": [ticker],
         "line_items": line_items,
@@ -111,16 +116,30 @@ def search_line_items(
         "period": period,
         "limit": limit,
     }
-    response = requests.post(url, headers=headers, json=body)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching data: {ticker} - {response.status_code} - {response.text}")
+
+    response = None
+    for _ in range(3):
+        resp = requests.post(url, headers=headers, json=body)
+        if resp.status_code == 200:
+            response = resp
+            break
+        if resp.status_code == 429:
+            retry_after = resp.headers.get("Retry-After")
+            delay = int(retry_after) if retry_after and retry_after.isdigit() else 1
+            time.sleep(delay)
+            continue
+        raise Exception(f"Error fetching data: {ticker} - {resp.status_code} - {resp.text}")
+
+    if response is None:
+        raise Exception(f"Error fetching data: {ticker} - too many retries")
+
     data = response.json()
     response_model = LineItemResponse(**data)
     search_results = response_model.search_results
     if not search_results:
         return []
 
-    # Cache the results
+    _cache.set_line_items(cache_key, [item.model_dump() for item in search_results])
     return search_results[:limit]
 
 
