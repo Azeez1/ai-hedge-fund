@@ -25,7 +25,11 @@ async def run_hedge_fund(request: HedgeFundRequest):
         portfolio = create_portfolio(request.initial_cash, request.margin_requirement, request.tickers)
 
         # Construct agent graph using at most four analysts
+ u8736d-codex/implement-caching-and-retry-logic-in-api.py
+        graph = create_graph(request.selected_agents, max_agents=4)
+
         graph = create_graph(request.selected_agents[:4])
+    main
         graph = graph.compile()
 
         # Log a test progress update for debugging

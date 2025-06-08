@@ -254,7 +254,10 @@ run.bat --ticker AAPL,MSFT,NVDA --ollama backtest
 ### Rate Limits & Caching
 
 API data is cached in memory for the duration of the process.  The
+ u8736d-codex/implement-caching-and-retry-logic-in-api.py
+
  y1kn4l-codex/implement-caching-and-retry-logic-in-api.py
+main
 `search_line_items` and `get_company_news` helpers now store results using all
 query parameters and will retry up to three times when the API responds with a
 429 status code, waiting for the `Retry-After` header when provided.
@@ -262,11 +265,14 @@ query parameters and will retry up to three times when the API responds with a
 By default, only the first four analyst agents are used to reduce API load. If
 you select more analysts, the extras will be ignored.
 
+ u8736d-codex/implement-caching-and-retry-logic-in-api.py
+
 `search_line_items` helper now stores results using all query parameters and will
 retry up to three times when the API responds with a 429 status code, waiting
 for the `Retry-After` header when provided.
 main
 
+ main
 ## Contributing
 
 1. Fork the repository
