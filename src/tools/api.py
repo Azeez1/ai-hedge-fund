@@ -171,9 +171,21 @@ def get_insider_trades(
             url += f"&filing_date_gte={start_date}"
         url += f"&limit={limit}"
 
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            raise Exception(f"Error fetching data: {ticker} - {response.status_code} - {response.text}")
+        response = None
+        for _ in range(3):
+            resp = requests.get(url, headers=headers)
+            if resp.status_code == 200:
+                response = resp
+                break
+            if resp.status_code == 429:
+                retry_after = resp.headers.get("Retry-After")
+                delay = int(retry_after) if retry_after and retry_after.isdigit() else 1
+                time.sleep(delay)
+                continue
+            raise Exception(f"Error fetching data: {ticker} - {resp.status_code} - {resp.text}")
+
+        if response is None:
+            raise Exception(f"Error fetching data: {ticker} - too many retries")
 
         data = response.json()
         response_model = InsiderTradeResponse(**data)
@@ -209,7 +221,7 @@ def get_company_news(
     start_date: str | None = None,
     limit: int = 1000,
 ) -> list[CompanyNews]:
-    """Fetch company news from cache or API."""
+    """Fetch company news from cache or API with basic retry on rate limits."""
     # Create a cache key that includes all parameters to ensure exact matches
     cache_key = f"{ticker}_{start_date or 'none'}_{end_date}_{limit}"
     
@@ -231,9 +243,23 @@ def get_company_news(
             url += f"&start_date={start_date}"
         url += f"&limit={limit}"
 
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            raise Exception(f"Error fetching data: {ticker} - {response.status_code} - {response.text}")
+        response = None
+        for _ in range(3):
+            resp = requests.get(url, headers=headers)
+            if resp.status_code == 200:
+                response = resp
+                break
+            if resp.status_code == 429:
+                retry_after = resp.headers.get("Retry-After")
+                delay = int(retry_after) if retry_after and retry_after.isdigit() else 1
+                time.sleep(delay)
+                continue
+            raise Exception(
+                f"Error fetching data: {ticker} - {resp.status_code} - {resp.text}"
+            )
+
+        if response is None:
+            raise Exception(f"Error fetching data: {ticker} - too many retries")
 
         data = response.json()
         response_model = CompanyNewsResponse(**data)

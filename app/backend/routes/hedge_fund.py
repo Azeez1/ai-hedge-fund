@@ -24,8 +24,8 @@ async def run_hedge_fund(request: HedgeFundRequest):
         # Create the portfolio
         portfolio = create_portfolio(request.initial_cash, request.margin_requirement, request.tickers)
 
-        # Construct agent graph
-        graph = create_graph(request.selected_agents)
+        # Construct agent graph using at most four analysts
+        graph = create_graph(request.selected_agents[:4])
         graph = graph.compile()
 
         # Log a test progress update for debugging
