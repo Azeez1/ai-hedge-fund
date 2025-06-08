@@ -39,6 +39,7 @@ class Backtester:
         model_provider: str = "OpenAI",
         selected_analysts: list[str] = [],
         initial_margin_requirement: float = 0.0,
+        max_analysts: int = 4,
     ):
         """
         :param agent: The trading agent (Callable).
@@ -58,7 +59,8 @@ class Backtester:
         self.initial_capital = initial_capital
         self.model_name = model_name
         self.model_provider = model_provider
-        self.selected_analysts = selected_analysts
+        self.selected_analysts = selected_analysts[:max_analysts] if selected_analysts else []
+        self.max_analysts = max_analysts
 
         # Initialize portfolio with support for long/short positions
         self.portfolio_values = []
@@ -350,6 +352,7 @@ class Backtester:
                 model_name=self.model_name,
                 model_provider=self.model_provider,
                 selected_analysts=self.selected_analysts,
+                max_analysts=self.max_analysts,
             )
             decisions = output["decisions"]
             analyst_signals = output["analyst_signals"]
@@ -685,7 +688,20 @@ if __name__ == "__main__":
             sys.exit(0)
         else:
             selected_analysts = choices
-            print(f"\nSelected analysts: " f"{', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}")
+
+            if len(selected_analysts) > 4:
+                print("\nLimiting to the first 4 analysts due to rate limits.\n")
+                selected_analysts = selected_analysts[:4]
+
+            print(
+                f"\nSelected analysts: "
+                f"{', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in selected_analysts)}"
+            )
+
+    # Ensure no more than four analysts are used when provided via command line
+    if selected_analysts and len(selected_analysts) > 4:
+        print("\nLimiting to the first 4 analysts due to rate limits.\n")
+        selected_analysts = selected_analysts[:4]
 
     # Select LLM model based on whether Ollama is being used
     model_name = ""
@@ -770,6 +786,7 @@ if __name__ == "__main__":
         model_provider=model_provider,
         selected_analysts=selected_analysts,
         initial_margin_requirement=args.margin_requirement,
+        max_analysts=4,
     )
 
     performance_metrics = backtester.run_backtest()
