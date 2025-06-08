@@ -11,8 +11,9 @@ from src.graph.state import AgentState
 
 
 # Helper function to create the agent graph
-def create_graph(selected_agents: list[str]) -> StateGraph:
-    """Create the workflow with selected agents."""
+def create_graph(selected_agents: list[str], max_agents: int = 4) -> StateGraph:
+    """Create the workflow with selected agents, limiting total agents."""
+    selected_agents = selected_agents[:max_agents]
     graph = StateGraph(AgentState)
     graph.add_node("start_node", start)
 
