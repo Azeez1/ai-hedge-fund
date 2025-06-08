@@ -51,17 +51,17 @@ def run_hedge_fund(
     selected_analysts: list[str] = [],
     model_name: str = "gpt-4o",
     model_provider: str = "OpenAI",
+    max_analysts: int = 4,
 ):
     # Start progress tracking
     progress.start()
 
     try:
-        # Create a new workflow if analysts are customized
-        if selected_analysts:
-            workflow = create_workflow(selected_analysts)
-            agent = workflow.compile()
-        else:
-            agent = app
+        # Limit the number of analysts to avoid excessive API calls
+        analysts = selected_analysts or list(get_analyst_nodes().keys())
+        analysts = analysts[:max_analysts]
+        workflow = create_workflow(analysts)
+        agent = workflow.compile()
 
         final_state = agent.invoke(
             {
@@ -174,7 +174,12 @@ if __name__ == "__main__":
         sys.exit(0)
     else:
         selected_analysts = choices
-        print(f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n")
+        if len(selected_analysts) > 4:
+            print(f"\nLimiting to the first 4 analysts due to rate limits.\n")
+            selected_analysts = selected_analysts[:4]
+        print(
+            f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in selected_analysts)}\n"
+        )
 
     # Select LLM model based on whether Ollama is being used
     model_name = ""
