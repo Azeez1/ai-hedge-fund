@@ -251,6 +251,13 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --ollama
 run.bat --ticker AAPL,MSFT,NVDA --ollama backtest
 ```
 
+### Rate Limits & Caching
+
+API data is cached in memory for the duration of the process.  The
+`search_line_items` helper now stores results using all query parameters and will
+retry up to three times when the API responds with a 429 status code, waiting
+for the `Retry-After` header when provided.
+
 ## Contributing
 
 1. Fork the repository
