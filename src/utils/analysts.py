@@ -15,6 +15,7 @@ from src.agents.technicals import technical_analyst_agent
 from src.agents.valuation import valuation_analyst_agent
 from src.agents.warren_buffett import warren_buffett_agent
 from src.agents.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
+from src.agents.ict_agent import ict_trading_agent
 
 # Define analyst configuration - single source of truth
 ANALYST_CONFIG = {
@@ -92,6 +93,11 @@ ANALYST_CONFIG = {
         "display_name": "Valuation Analyst",
         "agent_func": valuation_analyst_agent,
         "order": 14,
+    },
+    "ict_trader": {
+        "display_name": "ICT Trader (Inner Circle Trader)",
+        "agent_func": ict_trading_agent,
+        "order": 15,
     },
 }
 
